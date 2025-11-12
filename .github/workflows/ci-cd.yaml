@@ -3,18 +3,18 @@ name: CI/CD Pipeline
 on:
   push:
     branches:
-      - main  # triggers on push to main
+      - main
 
 jobs:
   build-test-deploy:
     runs-on: ubuntu-latest
 
     steps:
-    # 1. Checkout repository
+    # 1. Checkout code
     - name: Checkout code
       uses: actions/checkout@v3
 
-    # 2. Setup Node.js (for building/testing)
+    # 2. Setup Node.js
     - name: Setup Node.js
       uses: actions/setup-node@v3
       with:
@@ -25,7 +25,7 @@ jobs:
       run: npm install
 
     - name: Run tests
-      run: npm test || echo "Tests failed"  # optional: fail the workflow if tests fail
+      run: npm test || echo "Tests failed"
 
     # 4. Log in to Docker Hub
     - name: Login to Docker Hub
@@ -34,27 +34,28 @@ jobs:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
 
-    # 5. Build and push Docker image
-    - name: Build and push Docker image
-      uses: docker/build-push-action@v4
-      with:
-        context: .
-        push: true
-        tags: hari0987/myapp:latest
+    # 5. Build Docker image
+    - name: Build Docker image
+      run: docker build -t hari0987/myapp:latest .
 
-        # 6. Set up kind
-    - name: Set up kind
+    # 6. Push Docker image to Docker Hub
+    - name: Push Docker image
+      run: docker push hari0987/myapp:latest
+
+    # 7. Setup kind
+    - name: Setup kind
       uses: engineerd/setup-kind@v0.5.0
 
-    # 7. Create kind cluster
+    # 8. Create kind cluster with modern image
     - name: Create kind cluster
       run: |
-        kind create cluster \
-          --name kind \
-          --image kindest/node:v1.27.6 \
-          --wait 300s
+        kind create cluster --name kind --image kindest/node:v1.27.6 --wait 300s
 
-    # 8. Deploy to Kubernetes
+    # 9. Load Docker image into kind
+    - name: Load Docker image into kind
+      run: kind load docker-image hari0987/myapp:latest --name kind
+
+    # 10. Deploy to Kubernetes
     - name: Deploy to Kubernetes
       run: |
         kubectl apply -f k8s/deployment.yaml
