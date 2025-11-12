@@ -42,19 +42,17 @@ jobs:
         push: true
         tags: hari0987/myapp:latest
 
-    # 6. Setup kubectl
-    - name: Setup kubectl
-      uses: azure/setup-kubectl@v3
-      with:
-        version: 'v1.34.0'
+    # 6. Set up kind (Kubernetes in Docker)
+    - name: Set up kind
+      uses: engineerd/setup-kind@v0.5.0
 
-    # 7. Deploy to Minikube (or any cluster)
+    # 7. Create kind cluster
+    - name: Create kind cluster
+      run: kind create cluster --name mycluster
+
+    # 8. Deploy to Kubernetes
     - name: Deploy to Kubernetes
-      env:
-        KUBECONFIG: ${{ secrets.KUBECONFIG }}
       run: |
-        echo "$KUBECONFIG" | base64 --decode > kubeconfig
-        export KUBECONFIG=$PWD/kubeconfig
         kubectl apply -f k8s/deployment.yaml
         kubectl apply -f k8s/service.yaml
         kubectl rollout status deployment/myapp-deployment
