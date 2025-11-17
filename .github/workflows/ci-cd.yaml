@@ -6,6 +6,7 @@ on:
       - main
 
 jobs:
+
   build-test-deploy:
     runs-on: ubuntu-latest
 
@@ -55,11 +56,37 @@ jobs:
           docker pull hari0987/myapp:latest
           kind load docker-image hari0987/myapp:latest --name chart-testing
 
-      - name: Deploy to Kubernetes
+      - name: Deploy to Kubernetes (robust + debug)
         run: |
-          kubectl apply -f k8s/deployment.yaml
-          kubectl apply -f k8s/service.yaml
-          kubectl rollout status deployment/myapp-deployment
+          echo "=== workspace ==="
+          pwd
+          echo
+
+          echo "=== k8s dir listing ==="
+          ls -la k8s || true
+          echo
+
+          echo "=== file sizes (wc -c) ==="
+          wc -c k8s/* || true
+          echo
+
+          echo "=== show file contents ==="
+          for f in k8s/*; do
+            echo "----- $f -----"
+            sed -n '1,200p' "$f"
+            echo
+          done
+
+          echo "=== Applying manifests ==="
+          kubectl apply -f k8s --recursive
+          echo
+
+          echo "=== Resources ==="
+          kubectl get all -o wide
+          echo
+
+          echo "=== Rollout status ==="
+          kubectl rollout status deployment/myapp-deployment --timeout=120s
 
       - name: Test Application
         run: |
