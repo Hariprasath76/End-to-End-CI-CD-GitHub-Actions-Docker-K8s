@@ -36,8 +36,8 @@ jobs:
 
       - name: Push Docker image
         run: docker push hari0987/myapp:latest
-
-  kind-test:
+#Updated kind-test job to deploy and test the application in a Kind cluster
+    kind-test:
     needs: build-test-deploy
     runs-on: ubuntu-latest
 
@@ -54,7 +54,7 @@ jobs:
       - name: Load Docker image to Kind
         run: |
           docker pull hari0987/myapp:latest
-          kind load docker-image hari0987/myapp:latest
+          kind load docker-image hari0987/myapp:latest --name chart-testing
 
       - name: Deploy to Kubernetes
         run: |
@@ -62,8 +62,9 @@ jobs:
           kubectl apply -f k8s/service.yaml
           kubectl rollout status deployment/myapp-deployment
 
-      - name: Test application
+      - name: Test Application
         run: |
           kubectl port-forward svc/myapp-service 3000:3000 &
           sleep 10
           curl -f http://localhost:3000/ || exit 1
+
