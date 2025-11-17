@@ -58,34 +58,38 @@ jobs:
 
       - name: Deploy to Kubernetes (robust + debug)
         run: |
-          echo "=== workspace ==="
+          echo "=== CURRENT WORKSPACE ==="
           pwd
           echo
 
-          echo "=== k8s dir listing ==="
+          echo "=== FILE TREE ==="
+          ls -R .
+          echo
+
+          echo "=== k8s directory listing ==="
           ls -la k8s || true
           echo
 
-          echo "=== file sizes (wc -c) ==="
+          echo "=== file sizes ==="
           wc -c k8s/* || true
           echo
 
-          echo "=== show file contents ==="
+          echo "=== file contents ==="
           for f in k8s/*; do
             echo "----- $f -----"
             sed -n '1,200p' "$f"
             echo
           done
 
-          echo "=== Applying manifests ==="
+          echo "=== APPLYING MANIFESTS ==="
           kubectl apply -f k8s --recursive
           echo
 
-          echo "=== Resources ==="
+          echo "=== RESOURCES ==="
           kubectl get all -o wide
           echo
 
-          echo "=== Rollout status ==="
+          echo "=== ROLLOUT STATUS ==="
           kubectl rollout status deployment/myapp-deployment --timeout=120s
 
       - name: Test Application
