@@ -6,7 +6,6 @@ on:
       - main
 
 jobs:
-
   build-test-deploy:
     runs-on: ubuntu-latest
 
@@ -36,8 +35,8 @@ jobs:
 
       - name: Push Docker image
         run: docker push hari0987/myapp:latest
-#Updated kind-test job to deploy and test the application in a Kind cluster
-    kind-test:
+
+  kind-test:
     needs: build-test-deploy
     runs-on: ubuntu-latest
 
@@ -67,4 +66,3 @@ jobs:
           kubectl port-forward svc/myapp-service 3000:3000 &
           sleep 10
           curl -f http://localhost:3000/ || exit 1
-
